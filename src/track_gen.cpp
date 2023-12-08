@@ -26,6 +26,7 @@ void fillTrackDataPoint(float* img_ptr,
 
     Track track;
     track.buildRealisticFSTrack(detection_prob, max_false_positives);
+    track.renormalizeTrack(propagation_dist);
     
     std::vector<Point> cones;
     track.getAllCones(cones);
@@ -55,7 +56,7 @@ PyArrayPair generateFSDataSet(const int num_tracks,
     const int img_size = static_cast<int>(img_range / img_resolution);
 
     py::array_t<float> images({num_tracks, img_size, img_size});
-    py::array_t<float> angles({num_tracks});
+    py::array_t<float> angles(num_tracks);
 
     std::fill(images.mutable_data(), images.mutable_data() + images.size(), 0.0f);
 
@@ -71,7 +72,7 @@ PyArrayPair generateFSDataSet(const int num_tracks,
 }
 
 PYBIND11_MODULE(fsgenerator, m) {
-    m.def("generate_fs_tracks", &generateFSDataSet, "Generates a track dataset");
+    m.def("generate_fs_tracks", &generateFSDataSet, "Generates a track dataset",
           py::arg("num_tracks"), py::arg("propagation_dist"), py::arg("detection_prob"), 
-          py::arg("max_false_positives"), py::arg("img_range"), py::arg("img_resolution");
+          py::arg("max_false_positives"), py::arg("img_range"), py::arg("img_resolution"));
 }
