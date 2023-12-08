@@ -39,6 +39,19 @@ public:
     }
 
 
+    void renormalizeTrack(const float propagation_dist) {
+        float current_propagation_angle = getPropagationAngle(propagation_dist);
+        rotatePoints(center_points_, -current_propagation_angle);
+        rotatePoints(left_cones_, -current_propagation_angle);
+        rotatePoints(right_cones_, -current_propagation_angle);
+
+        const float new_propagation_angle = random_uniform(-M_PI / 4.0, M_PI / 4.0);
+
+        rotatePoints(center_points_, new_propagation_angle);
+        rotatePoints(left_cones_, new_propagation_angle);
+        rotatePoints(right_cones_, new_propagation_angle);
+    }
+
     void buildPerfectTrackAngles(const int num_radial_segments, const float dummy_spacing, const float mean_track_width) {   
         dummy_spacing_ = dummy_spacing;
 
@@ -108,7 +121,7 @@ public:
 
 
     void addNoise() {
-        float rotation_noise = random_uniform(-M_PI / 4, M_PI / 4);
+        float rotation_noise = random_uniform(-M_PI / 7, M_PI / 7);
         rotatePoints(center_points_, rotation_noise);
         rotatePoints(left_cones_, rotation_noise);
         rotatePoints(right_cones_, rotation_noise);
@@ -206,7 +219,7 @@ private:
 
     int origin_index_ = 0;
     float dummy_spacing_;
-    float full_track_length_;
+    float full_track_length_ = 0;
 
     float generateTrackWidth(float mean_track_width, std::vector<float> radiuses) {
         float min_radius = 1000;
