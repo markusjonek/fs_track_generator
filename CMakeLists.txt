@@ -1,17 +1,38 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.23.1)
 project(fs_track_generator)
+
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+if(APPLE)
+    set(CMAKE_C_COMPILER "/opt/homebrew/opt/llvm/bin/clang")
+    set(CMAKE_CXX_COMPILER "/opt/homebrew/opt/llvm/bin/clang++")
+
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang\$")
+        set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp")
+        set(OpenMP_C_LIB_NAMES "omp")
+        set(OpenMP_omp_LIBRARY omp)
+    endif()
+
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
+        set(OpenMP_CXX_LIB_NAMES "omp")
+        set(OpenMP_omp_LIBRARY omp)
+    endif()
+
+endif()
 
 # Find required packages
 find_package(pybind11 REQUIRED)
-find_package(OpenMP REQUIRED)  # Find the OpenMP package
+find_package(OpenMP REQUIRED)
 
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-O3")
-
+# Set optimization flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 # Define target
-add_library(fsgenerator MODULE src/track_gen.cpp) 
+add_library(fsgenerator MODULE src/track_gen.cpp)
 
 # Include directories
 target_include_directories(fsgenerator PRIVATE include)
@@ -21,7 +42,7 @@ target_link_libraries(fsgenerator PRIVATE pybind11::module OpenMP::OpenMP_CXX)
 
 # Set properties for Python module
 set_target_properties(fsgenerator PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"
-                                                 SUFFIX "${PYTHON_MODULE_EXTENSION}")
+                                             SUFFIX "${PYTHON_MODULE_EXTENSION}")
 
 # Enable C++17
 target_compile_features(fsgenerator PRIVATE cxx_std_17)
