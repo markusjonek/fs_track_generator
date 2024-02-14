@@ -22,6 +22,30 @@ public:
         cones.insert(cones.end(), false_positives_.begin(), false_positives_.end());
     }
 
+    void getLeftCones(std::vector<Point>& left_cones) {
+        left_cones = left_cones_;
+    }
+
+    void getRightCones(std::vector<Point>& right_cones) {
+        right_cones = right_cones_;
+    }
+
+    void getCenterPoints(std::vector<Point>& center_points) {
+        center_points = center_points_;
+    }
+
+    void getFalsePositives(std::vector<Point>& false_positives) {
+        false_positives = false_positives_;
+    }
+
+    int getOriginIndex() {
+        return origin_index_;
+    }
+
+    int getUseEvery() {
+        return use_every_;
+    }
+
     void buildRealisticFSTrack(float detection_prob, int max_false_positives) {
         dummy_spacing_ = 0.5;
         float mean_track_width = 4.5;
@@ -30,7 +54,7 @@ public:
 
         buildPerfectTrack(num_radial_segments, dummy_spacing_, mean_track_width);
 
-        float driven_distance = random_uniform(0.0, full_track_length_ / 2.0);
+        float driven_distance = random_uniform(0.0, full_track_length_ / 1.5);
         driveForward(driven_distance);        
         addNoise();
         downsampleTrack(cone_spacing);
@@ -39,13 +63,13 @@ public:
     }
 
 
-    void renormalizeTrack(const float propagation_dist) {
+    void renormalizeTrack(const float propagation_dist, const float max_prop_angle) {
         float current_propagation_angle = getPropagationAngle(propagation_dist);
         rotatePoints(center_points_, -current_propagation_angle);
         rotatePoints(left_cones_, -current_propagation_angle);
         rotatePoints(right_cones_, -current_propagation_angle);
 
-        const float new_propagation_angle = random_uniform(-M_PI / 4.0, M_PI / 4.0);
+        const float new_propagation_angle = random_uniform(-max_prop_angle, max_prop_angle);
 
         rotatePoints(center_points_, new_propagation_angle);
         rotatePoints(left_cones_, new_propagation_angle);
@@ -154,12 +178,12 @@ public:
     void downsampleTrack(const float new_cone_spacing) {
         Point last_center_point = center_points_[0];
 
-        int use_very = static_cast<int>(new_cone_spacing / dummy_spacing_);
+        use_every_ = static_cast<int>(new_cone_spacing / dummy_spacing_);
 
         std::vector<Point> downsampled_left_cones;
         std::vector<Point> downsampled_right_cones;
 
-        for (int i = 1; i < left_cones_.size(); i+=use_very) {
+        for (int i = 0; i < left_cones_.size(); i+=use_every_) {
             downsampled_left_cones.push_back(left_cones_[i]);
             downsampled_right_cones.push_back(right_cones_[i]);
         }
@@ -220,6 +244,7 @@ private:
     int origin_index_ = 0;
     float dummy_spacing_;
     float full_track_length_ = 0;
+    int use_every_ = 1; // use every nth cone when downsampling
 
     float generateTrackWidth(float mean_track_width, std::vector<float> radiuses) {
         float min_radius = 1000;
